@@ -23,7 +23,9 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build & Test
-        run: ./gradlew clean build --no-daemon
+        run: ./gradlew clean build
+        env:
+          SPRING_PROFILES_ACTIVE: test
 
       - name: Upload test reports (always)
         if: always()
