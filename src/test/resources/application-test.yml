@@ -11,8 +11,7 @@ spring:
       hibernate:
         format_sql: true
   flyway:
-    enabled: false  # 테스트에선 마이그레이션 비활성화(또는 H2용 스크립트 별도 준비 시 true)
-
+    enabled: false
 logging:
   level:
     org.hibernate.SQL: warn

@@ -17,14 +17,17 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
-
-server:
-  port: 8080
-
   sql:
     init:
       mode: never
 
+server:
+  port: 8080
+
 springdoc:
   api-docs.path: /api-docs
   swagger-ui.path: /swagger-ui.html
+
+logging:
+  level:
+    org.hibernate.SQL: warn
