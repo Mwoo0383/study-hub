@@ -39,7 +39,6 @@ public class AttachmentService {
                 .build();
         attachRepo.save(a);
 
-        post.getAttachments().add(a); // 연결
         return new Response(a.getId(), a.getOriginalName(), a.getContentType(), a.getFileSize(), a.getStorageUri());
     }
 

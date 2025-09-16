@@ -3,67 +3,94 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 CREATE TABLE "user" (
                         id BIGSERIAL PRIMARY KEY,
-                        email TEXT NOT NULL UNIQUE,
-                        password_hash TEXT NOT NULL,
-                        nickname TEXT NOT NULL UNIQUE,
-                        role TEXT NOT NULL DEFAULT 'ROLE_USER',
-                        status TEXT NOT NULL DEFAULT 'ACTIVE',
-                        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+                        username VARCHAR(50) NOT NULL UNIQUE,
+                        password VARCHAR(255) NOT NULL,
+                        nickname VARCHAR(50) NOT NULL UNIQUE,
+                        email VARCHAR(100) NOT NULL UNIQUE,
+                        role VARCHAR(20) NOT NULL DEFAULT 'USER',
+                        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+                        updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- 게시판
 CREATE TABLE board (
                        id BIGSERIAL PRIMARY KEY,
-                       name TEXT NOT NULL UNIQUE,
-                       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+                       name VARCHAR(100) NOT NULL,
+                       slug VARCHAR(100) NOT NULL,
+                       description TEXT,
+                       visibility VARCHAR(20) NOT NULL DEFAULT 'PUBLIC',
+                       sort_order INT NOT NULL DEFAULT 0,
+                       created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+                       updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+                       CONSTRAINT ux_board_slug UNIQUE (slug)
 );
+-- 인덱스
+CREATE INDEX idx_board_name ON board(name);
 
+-- 게시글
 CREATE TABLE post (
                       id BIGSERIAL PRIMARY KEY,
                       board_id BIGINT NOT NULL REFERENCES board(id),
-                      author_id BIGINT NOT NULL REFERENCES "user"(id),
-                      title TEXT NOT NULL,
+                      user_id BIGINT NOT NULL REFERENCES "user"(id),
+                      title VARCHAR(200) NOT NULL,
+                      slug  VARCHAR(200) NOT NULL,
                       content TEXT NOT NULL,
-                      is_deleted BOOLEAN NOT NULL DEFAULT false,
-                      view_count INT NOT NULL DEFAULT 0,
+                      status VARCHAR(20) NOT NULL DEFAULT 'PUBLISHED',
+                      view_count BIGINT NOT NULL DEFAULT 0,
                       created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-                      updated_at TIMESTAMPTZ
+                      updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+                      CONSTRAINT ux_post_board_slug UNIQUE (board_id, slug)
 );
 
+-- 인덱스
+CREATE INDEX idx_post_board_created_at ON post(board_id, created_at DESC);
+
+-- 댓글
 CREATE TABLE comment (
                          id BIGSERIAL PRIMARY KEY,
                          post_id BIGINT NOT NULL REFERENCES post(id) ON DELETE CASCADE,
-                         author_id BIGINT NOT NULL REFERENCES "user"(id),
+                         user_id BIGINT NOT NULL REFERENCES "user"(id),
                          content TEXT NOT NULL,
-                         parent_id BIGINT,
-                         is_deleted BOOLEAN NOT NULL DEFAULT false,
                          created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-                         updated_at TIMESTAMPTZ
+                         updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- 인덱스
+CREATE INDEX idx_comment_post_created_at ON comment(post_id, created_at);
+
+
+-- 태그
 CREATE TABLE tag (
                      id BIGSERIAL PRIMARY KEY,
-                     name TEXT NOT NULL UNIQUE
+                     name VARCHAR(50) NOT NULL UNIQUE,
+                     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- 게시글-태그(다대다)
 CREATE TABLE posttag (
                          post_id BIGINT NOT NULL REFERENCES post(id) ON DELETE CASCADE,
-                         tag_id BIGINT NOT NULL REFERENCES tag(id),
+                         tag_id  BIGINT NOT NULL REFERENCES tag(id),
                          PRIMARY KEY (post_id, tag_id)
 );
+CREATE INDEX idx_posttag_post ON posttag(post_id);
+CREATE INDEX idx_posttag_tag  ON posttag(tag_id);
 
+-- 첨부파일 (엔티티 기준: Post FK 없음, 업로더/스토리지 메타만)
 CREATE TABLE attachment (
                             id BIGSERIAL PRIMARY KEY,
-                            post_id BIGINT NOT NULL REFERENCES post(id) ON DELETE CASCADE,
-                            original_name TEXT NOT NULL,
-                            stored_name TEXT NOT NULL,
-                            size INT NOT NULL,
-                            content_type TEXT,
-                            created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+                            original_name VARCHAR(255) NOT NULL,
+                            stored_name   VARCHAR(255) NOT NULL,
+                            content_type  VARCHAR(100) NOT NULL,
+                            size          BIGINT NOT NULL,
+                            storage_uri   TEXT NOT NULL,
+                            uploader_id   BIGINT NOT NULL,
+                            created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- 좋아요(복합키)
 CREATE TABLE postlike (
                           user_id BIGINT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
-                          post_id BIGINT NOT NULL REFERENCES post(id) ON DELETE CASCADE,
+                          post_id BIGINT NOT NULL REFERENCES post(id)    ON DELETE CASCADE,
                           created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
                           PRIMARY KEY (user_id, post_id)
 );
@@ -92,13 +119,3 @@ CREATE TABLE report (
                         status TEXT NOT NULL DEFAULT 'OPEN',
                         created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-
--- 인덱스
-CREATE INDEX idx_post_board_created ON post(board_id, created_at DESC) WHERE is_deleted = false;
-CREATE INDEX idx_post_title_trgm   ON post USING GIN (title gin_trgm_ops);
-CREATE INDEX idx_post_content_trgm ON post USING GIN (content gin_trgm_ops);
-CREATE INDEX idx_posttag_post ON posttag(post_id);
-CREATE INDEX idx_posttag_tag  ON posttag(tag_id);
-CREATE INDEX idx_comment_post_created ON comment(post_id, created_at);
-CREATE UNIQUE INDEX ux_user_email    ON "user"(email);
-CREATE UNIQUE INDEX ux_user_nickname ON "user"(nickname);
