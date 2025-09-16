@@ -1,8 +1,11 @@
 package lang.studyhub.domain.post.entity;
 
 import jakarta.persistence.*;
+import lang.studyhub.domain.attachment.entity.Attachment;
 import lombok.*;
 import java.time.Instant;
+import java.util.Set;
+
 import lang.studyhub.domain.board.entity.Board;
 
 @Entity
@@ -40,6 +43,15 @@ public class Post {
 
     @Column(nullable = false)
     private Instant updatedAt;
+
+    @ManyToMany
+    @JoinTable(
+            name = "attachment",
+            joinColumns = @JoinColumn(name = "post_id"),
+            inverseJoinColumns = @JoinColumn(name = "id")
+    )
+    private Set<Attachment> attachments = new java.util.HashSet<>();
+
 
     @PrePersist
     void onCreate() {
