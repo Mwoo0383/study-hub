@@ -2,8 +2,10 @@ package lang.studyhub.domain.post.entity;
 
 import jakarta.persistence.*;
 import lang.studyhub.domain.attachment.entity.Attachment;
+import lang.studyhub.domain.tag.entity.Tag;
 import lombok.*;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.Set;
 
 import lang.studyhub.domain.board.entity.Board;
@@ -51,6 +53,15 @@ public class Post {
             inverseJoinColumns = @JoinColumn(name = "id")
     )
     private Set<Attachment> attachments = new java.util.HashSet<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "posttag",
+            joinColumns = @JoinColumn(name = "post_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    @Builder.Default
+    private Set<Tag> tags = new HashSet<>();
 
 
     @PrePersist
