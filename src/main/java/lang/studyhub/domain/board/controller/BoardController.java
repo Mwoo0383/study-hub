@@ -1,5 +1,6 @@
 package lang.studyhub.domain.board.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lang.studyhub.domain.board.dto.BoardDto;
 import lang.studyhub.domain.board.service.BoardService;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/boards")
 @RequiredArgsConstructor
+@Tag(name = "Board", description = "게시판 관리 API")
 public class BoardController {
 
     private final BoardService boardService;

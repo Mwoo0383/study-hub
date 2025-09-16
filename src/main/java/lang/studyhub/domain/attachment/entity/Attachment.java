@@ -14,7 +14,7 @@ public class Attachment {
     @Column(nullable=false, length=255) private String originalName;
     @Column(nullable=false, length=255) private String storedName;
     @Column(nullable=false, length=100) private String contentType;
-    @Column(nullable=false) private Long fileSize;
+    @Column(name = "size", nullable=false) private Long fileSize;
     @Column(nullable=false, columnDefinition="TEXT") private String storageUri; // file://... or s3://...
     @Column(nullable=false) private Long uploaderId;
 

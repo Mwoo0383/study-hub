@@ -2,8 +2,11 @@ package lang.studyhub.domain.post.entity;
 
 import jakarta.persistence.*;
 import lang.studyhub.domain.attachment.entity.Attachment;
+import lang.studyhub.domain.tag.entity.Tag;
+import lang.studyhub.domain.user.entity.User;
 import lombok.*;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.Set;
 
 import lang.studyhub.domain.board.entity.Board;
@@ -22,13 +25,16 @@ public class Post {
     @JoinColumn(name = "board_id", nullable = false)
     private Board board;
 
+    @ManyToOne(fetch=FetchType.LAZY, optional=false)
+    @JoinColumn(name="user_id", nullable=false)
+    private User user;
+
     @Column(nullable = false, length = 200)
     private String title;
 
     @Column(nullable = false, length = 200)
     private String slug;
 
-    @Lob
     @Column(nullable = false)
     private String content;
 
@@ -46,11 +52,12 @@ public class Post {
 
     @ManyToMany
     @JoinTable(
-            name = "attachment",
+            name = "posttag",
             joinColumns = @JoinColumn(name = "post_id"),
-            inverseJoinColumns = @JoinColumn(name = "id")
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
-    private Set<Attachment> attachments = new java.util.HashSet<>();
+    @Builder.Default
+    private Set<Tag> tags = new HashSet<>();
 
 
     @PrePersist
