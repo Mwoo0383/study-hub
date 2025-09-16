@@ -9,7 +9,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
         format_sql: true
@@ -27,6 +27,7 @@ server:
 springdoc:
   api-docs.path: /api-docs
   swagger-ui.path: /swagger-ui.html
+  packages-to-scan: lang.studyhub
 
 logging:
   level:
